@@ -717,17 +717,22 @@ MagickExport MagickBooleanType GetMultilineTypeMetrics(Image *image,
   char
     **textlist;
 
+  double
+    height;
+
   DrawInfo
     *annotate_info;
 
   MagickBooleanType
     status;
 
+  MagickSizeType
+    size;
+
   register ssize_t
     i;
 
   size_t
-    height,
     count;
 
   TypeMetric
@@ -762,7 +767,8 @@ MagickExport MagickBooleanType GetMultilineTypeMetrics(Image *image,
   *metrics=extent;
   height=(count*(size_t) (metrics->ascent-metrics->descent+
     0.5)+(count-1)*draw_info->interline_spacing);
-  if (AcquireMagickResource(HeightResource,height) == MagickFalse)
+  size=(MagickSizeType) fabs(height);
+  if (AcquireMagickResource(HeightResource,size) == MagickFalse)
     {
       (void) ThrowMagickException(exception,GetMagickModule(),ImageError,
         "WidthOrHeightExceedsLimit","`%s'",image->filename);
@@ -778,7 +784,8 @@ MagickExport MagickBooleanType GetMultilineTypeMetrics(Image *image,
           break;
         if (extent.width > metrics->width)
           *metrics=extent;
-        if (AcquireMagickResource(WidthResource,extent.width) == MagickFalse)
+        size=(MagickSizeType) fabs(extent.width);
+        if (AcquireMagickResource(WidthResource,size) == MagickFalse)
           {
             (void) ThrowMagickException(exception,GetMagickModule(),ImageError,
               "WidthOrHeightExceedsLimit","`%s'",image->filename);
@@ -1346,6 +1353,7 @@ static MagickBooleanType RenderFreetype(Image *image,const DrawInfo *draw_info,
 
   ssize_t
     code,
+    last_character,
     y;
 
   static FT_Outline_Funcs
@@ -1510,7 +1518,7 @@ static MagickBooleanType RenderFreetype(Image *image,const DrawInfo *draw_info,
   if (draw_info->render == MagickFalse)
     flags=FT_LOAD_NO_BITMAP;
   if (draw_info->text_antialias == MagickFalse)
-    flags|=FT_LOAD_TARGET_MONO;
+    flags|=FT_LOAD_RENDER | FT_LOAD_TARGET_MONO;
   else
     {
 #if defined(FT_LOAD_TARGET_LIGHT)
@@ -1569,6 +1577,7 @@ static MagickBooleanType RenderFreetype(Image *image,const DrawInfo *draw_info,
     exception);
   missing_glyph_id=FT_Get_Char_Index(face,' ');
   code=0;
+  last_character=(ssize_t) length-1;
   for (i=0; i < (ssize_t) length; i++)
   {
     FT_Outline
@@ -1634,7 +1643,7 @@ static MagickBooleanType RenderFreetype(Image *image,const DrawInfo *draw_info,
     bitmap=(FT_BitmapGlyph) glyph.image;
     point.x=offset->x+bitmap->left;
     if (bitmap->bitmap.pixel_mode == ft_pixel_mode_mono)
-      point.x=offset->x+(origin.x >> 6);
+      point.x=origin.x >> 6;
     point.y=offset->y-bitmap->top;
     if (draw_info->render != MagickFalse)
       {
@@ -1706,11 +1715,13 @@ static MagickBooleanType RenderFreetype(Image *image,const DrawInfo *draw_info,
                   q+=GetPixelChannels(image);
                 continue;
               }
-            if (bitmap->bitmap.pixel_mode != ft_pixel_mode_mono)
+            fill_opacity=1.0;
+            if (bitmap->bitmap.pixel_mode == ft_pixel_mode_grays)
               fill_opacity=(double) (r[n])/(bitmap->bitmap.num_grays-1);
             else
-              fill_opacity=((r[(x >> 3)+y*bitmap->bitmap.pitch] &
-                (1 << (~x & 0x07)))) == 0 ? 0.0 : 1.0;
+              if (bitmap->bitmap.pixel_mode == ft_pixel_mode_mono)
+                fill_opacity=((r[(x >> 3)+y*bitmap->bitmap.pitch] &
+                  (1 << (~x & 0x07)))) == 0 ? 0.0 : 1.0;
             if (draw_info->text_antialias == MagickFalse)
               fill_opacity=fill_opacity >= 0.5 ? 1.0 : 0.0;
             if (active == MagickFalse)
@@ -1771,7 +1782,10 @@ static MagickBooleanType RenderFreetype(Image *image,const DrawInfo *draw_info,
         (IsUTFSpace(code) == MagickFalse))
       origin.x+=(FT_Pos) (64.0*draw_info->interword_spacing);
     else
-      origin.x+=(FT_Pos) grapheme[i].x_advance;
+      if (i == last_character)
+        origin.x+=MagickMax((FT_Pos) grapheme[i].x_advance,bounds.xMax);
+      else
+        origin.x+=(FT_Pos) grapheme[i].x_advance;
     metrics->origin.x=(double) origin.x;
     metrics->origin.y=(double) origin.y;
     if (metrics->origin.x > metrics->width)
@@ -1797,7 +1811,7 @@ static MagickBooleanType RenderFreetype(Image *image,const DrawInfo *draw_info,
   metrics->bounds.y2/=64.0;
   metrics->origin.x/=64.0;
   metrics->origin.y/=64.0;
-  metrics->width/=64.0;
+  metrics->width=ceil(metrics->width/64.0);
   /*
     Relinquish resources.
   */

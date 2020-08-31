@@ -250,7 +250,8 @@ static Image *ReadCAPTIONImage(const ImageInfo *image_info,
             if (status == MagickFalse)
               break;
             width=(size_t) floor(metrics.width+draw_info->stroke_width+0.5);
-            height=(size_t) floor(metrics.height+draw_info->stroke_width+0.5);
+            height=(size_t) floor(metrics.height+draw_info->interline_spacing+
+              draw_info->stroke_width+0.5);
             if ((image->columns != 0) && (image->rows != 0))
               {
                 if ((width >= image->columns) && (height >= image->rows))
@@ -279,7 +280,8 @@ static Image *ReadCAPTIONImage(const ImageInfo *image_info,
         if (status == MagickFalse)
           break;
         width=(size_t) floor(metrics.width+draw_info->stroke_width+0.5);
-        height=(size_t) floor(metrics.height+draw_info->stroke_width+0.5);
+        height=(size_t) floor(metrics.height+draw_info->interline_spacing+
+          draw_info->stroke_width+0.5);
         if ((image->columns != 0) && (image->rows != 0))
           {
             if ((width < image->columns) && (height < image->rows))
@@ -309,14 +311,8 @@ static Image *ReadCAPTIONImage(const ImageInfo *image_info,
   (void) CloneString(&draw_info->geometry,geometry);
   status=AnnotateImage(image,draw_info,exception);
   if (image_info->pointsize == 0.0)
-    { 
-      char
-        pointsize[MagickPathExtent];
-      
-      (void) FormatLocaleString(pointsize,MagickPathExtent,"%.20g",
-        draw_info->pointsize);
-      (void) SetImageProperty(image,"caption:pointsize",pointsize,exception);
-    }
+    (void) FormatImageProperty(image,"caption:pointsize","%.*g",
+      GetMagickPrecision(),draw_info->pointsize);      
   draw_info=DestroyDrawInfo(draw_info);
   if (status == MagickFalse)
     {

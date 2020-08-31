@@ -275,6 +275,9 @@ MagickExport const char *GetMagickFeatures(void)
   " "
 #endif
 #endif
+#if defined(MAGICKCORE_HAVE_TCMALLOC)
+  "TCMalloc "
+#endif
 #if defined(ZERO_CONFIGURATION_SUPPORT)
   "Zero-configuration "
 #endif
@@ -558,7 +561,7 @@ MagickExport unsigned int GetMagickSignature(const StringInfo *nonce)
   signature=MagickLibInterface;
   (void) memcpy(p,&signature,sizeof(signature));
   p+=sizeof(signature);
-  signature=1;  /* endianess */
+  signature=1;  /* endianness */
   (void) memcpy(p,&signature,sizeof(signature));
   p+=sizeof(signature);
   SetStringInfoLength(version,p-GetStringInfoDatum(version));
