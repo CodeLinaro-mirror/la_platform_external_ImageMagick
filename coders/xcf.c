@@ -876,7 +876,7 @@ static void InitXCFImage(XCFLayerInfo *outLayer,ExceptionInfo *exception)
   outLayer->image->page.y=outLayer->offset_y;
   outLayer->image->page.width=outLayer->width;
   outLayer->image->page.height=outLayer->height;
-  (void) SetImageProperty(outLayer->image,"label",(char *)outLayer->name,
+  (void) SetImageProperty(outLayer->image,"label",(char *) outLayer->name,
     exception);
 }
 
@@ -1042,6 +1042,7 @@ static MagickBooleanType ReadOneLayer(const ImageInfo *image_info,Image* image,
     {
       outLayer->image->background_color.alpha_trait=BlendPixelTrait;
       outLayer->image->alpha_trait=BlendPixelTrait;
+      (void) SetImageBackgroundColor(outLayer->image,exception);
     }
 
   InitXCFImage(outLayer,exception);

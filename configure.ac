@@ -26,8 +26,8 @@ AC_PREREQ(2.69)
 # ==============================================================================
 m4_define([magick_major_version], [7])
 m4_define([magick_minor_version], [0])
-m4_define([magick_micro_version], [9])
-m4_define([magick_patchlevel_version], [15])
+m4_define([magick_micro_version], [10])
+m4_define([magick_patchlevel_version], [12])
 m4_define([magick_version],
           [magick_major_version.magick_minor_version.magick_micro_version-magick_patchlevel_version])
 m4_define([magick_git_revision],
@@ -560,6 +560,14 @@ if test "$enable_largefile" != no; then
     fi
 fi
 AC_SUBST(LFS_CPPFLAGS)
+
+#
+# Set SETJMP_IS_THREAD_SAFE define.
+#
+case "${host_os}" in
+  solaris2* ) ;;
+  *) AC_DEFINE(SETJMP_IS_THREAD_SAFE,1,[Setjmp/longjmp are thread safe]) ;;
+esac
 
 # Configure libtool
 : ${AR_FLAGS=cr}
@@ -1684,7 +1692,7 @@ AUTOTRACE_LIBS=""
 AUTOTRACE_PKG=""
 if test "x$with_autotrace" = "xyes"; then
   AC_MSG_RESULT([-------------------------------------------------------------])
-  PKG_CHECK_MODULES(AUTOTRACE,[autotrace >= 0.31.1], have_autotrace=yes, have_autotrace=no)
+  PKG_CHECK_MODULES(AUTOTRACE,[autotrace >= 0.31.2], have_autotrace=yes, have_autotrace=no)
   AC_MSG_RESULT([])
 fi
 
@@ -2413,7 +2421,7 @@ have_openjp2='no'
 LIBOPENJP2_CFLAGS=""
 LIBOPENJP2_LIBS=""
 LIBOPENJP2_PKG=""
-if test "x$with_openjp2" = "xyes"; then
+if test "$with_openjp2" != 'no'; then
   AC_MSG_RESULT([-------------------------------------------------------------])
   PKG_CHECK_MODULES(LIBOPENJP2,[libopenjp2 >= 2.1.0], have_openjp2=yes, have_openjp2=no)
   AC_MSG_RESULT([])
@@ -2900,7 +2908,7 @@ dnl ===========================================================================
 
 # Check for functions
 #
-AC_CHECK_FUNCS([acosh _aligned_malloc asinh atanh atoll atexit cabs carg cimag creal clock clock_getres clock_gettime ctime_r directio erf _exit execvp fchmod floor fork ftime ftruncate getc_unlocked getcwd getpid getexecname getdtablesize getpagesize getpwnam_r getrlimit getrusage gettimeofday gmtime_r isnan j0 j1 lltostr localtime_r lstat memmove memset mkstemp munmap nanosleep newlocale _NSGetExecutablePath pclose _pclose poll popen _popen posix_fadvise posix_fallocate posix_madvise posix_memalign posix_spawnp pow pread pwrite qsort_r raise rand_r readlink realpath select seekdir sendfile setlocale socket sqrt setvbuf stat strcasestr strchr strrchr strcspn strdup strpbrk strspn strstr strtod strtod_l strtol strtoul symlink sysconf sigemptyset sigaction spawnvp strerror strlcat strlcpy strcasecmp strncasecmp telldir tempnam times ulltostr uselocale usleep utime vfprintf vfprintf_l vsprintf vsnprintf vsnprintf_l waitpid _wfopen _wstat])
+AC_CHECK_FUNCS([acosh _aligned_malloc aligned_malloc asinh atanh atoll atexit cabs carg cimag creal clock clock_getres clock_gettime ctime_r directio erf _exit execvp fchmod floor fork ftime ftruncate getc_unlocked getcwd getpid getexecname getdtablesize getpagesize getpwnam_r getrlimit getrusage gettimeofday gmtime_r isnan j0 j1 lltostr localtime_r lstat memmove memset mkstemp munmap nanosleep newlocale _NSGetExecutablePath pclose _pclose poll popen _popen posix_fadvise posix_fallocate posix_madvise posix_memalign posix_spawnp pow pread pwrite qsort_r raise rand_r readlink realpath select seekdir sendfile setlocale socket sqrt setvbuf stat strcasestr strchr strrchr strcspn strdup strpbrk strspn strstr strtod strtod_l strtol strtoul symlink sysconf sigemptyset sigaction spawnvp strerror strlcat strlcpy strcasecmp strncasecmp telldir tempnam times ulltostr uselocale usleep utime vfprintf vfprintf_l vsprintf vsnprintf vsnprintf_l waitpid _wfopen _wstat])
 
 # Substitute compiler name to build/link PerlMagick
 #

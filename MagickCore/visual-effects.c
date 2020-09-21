@@ -3,11 +3,17 @@
 %                                                                             %
 %                                                                             %
 %                                                                             %
-%                                 FFFFF  X   X                                %
-%                                 F       X X                                 %
-%                                 FFF      X                                  %
-%                                 F       X X                                 %
-%                                 F      X   X                                %
+%                   V   V  IIIII  SSSSS  U   U   AAA   L                      %
+%                   V   V    I    SS     U   U  A   A  L                      %
+%                   V   V    I     SSS   U   U  AAAAA  L                      %
+%                    V V     I       SS  U   U  A   A  L                      %
+%                     V    IIIII  SSSSS   UUU   A   A  LLLLL                  %
+%                                                                             %
+%                EEEEE  FFFFF  FFFFF  EEEEE  CCCC  TTTTT  SSSSS               %
+%                E      F      F      E     C        T    SS                  %
+%                EEE    FFF    FFF    EEE   C        T     SSS                %
+%                E      F      F      E     C        T       SS               %
+%                EEEEE  F      F      EEEEE  CCCC    T    SSSSS               %
 %                                                                             %
 %                                                                             %
 %                   MagickCore Image Special Effects Methods                  %
@@ -474,6 +480,7 @@ MagickExport Image *CharcoalImage(const Image *image,const double radius,
   edge_image=EdgeImage(image,radius,exception);
   if (edge_image == (Image *) NULL)
     return((Image *) NULL);
+  edge_image->alpha_trait=UndefinedPixelTrait;
   charcoal_image=(Image *) NULL;
   status=ClampImage(edge_image,exception);
   if (status != MagickFalse)
@@ -1398,7 +1405,7 @@ static MagickBooleanType PlasmaImageProxy(Image *image,CacheView *image_view,
   double
     plasma;
 
-  MagickBooleanType
+  MagickStatusType
     status;
 
   register const Quantum
@@ -1452,7 +1459,7 @@ static MagickBooleanType PlasmaImageProxy(Image *image,CacheView *image_view,
       local_info.y1=(double) y_mid;
       status&=PlasmaImageProxy(image,image_view,u_view,v_view,random_info,
         &local_info,attenuate,depth,exception);
-      return(status);
+      return(status == 0 ? MagickFalse : MagickTrue);
     }
   x_mid=(ssize_t) ceil((segment->x1+segment->x2)/2-0.5);
   y_mid=(ssize_t) ceil((segment->y1+segment->y2)/2-0.5);
@@ -1596,7 +1603,7 @@ static MagickBooleanType PlasmaImageProxy(Image *image,CacheView *image_view,
     }
   if ((fabs(segment->x2-segment->x1) < 3.0) &&
       (fabs(segment->y2-segment->y1) < 3.0))
-    return(status);
+    return(status == 0 ? MagickFalse : MagickTrue);
   return(MagickFalse);
 }
 
@@ -2359,6 +2366,7 @@ MagickExport MagickBooleanType SolarizeImage(Image *image,
         if ((double) image->colormap[i].blue > threshold)
           image->colormap[i].blue=QuantumRange-image->colormap[i].blue;
       }
+      return(SyncImage(image,exception));
     }
   /*
     Solarize image.
